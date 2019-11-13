@@ -17,8 +17,8 @@ import (
 // swagger:model item
 type Item struct {
 
-	// compoleted
-	Compoleted bool `json:"compoleted,omitempty"`
+	// completed
+	Completed bool `json:"completed,omitempty"`
 
 	// description
 	// Required: true
