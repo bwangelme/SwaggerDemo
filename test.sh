@@ -11,3 +11,5 @@ swagger init spec \
 	--scheme http \
 	--consumes application/io.goswagger.examples.todo-list.v1+json \
 	--produces application/io.goswagger.examples.todo-list.v1+json
+
+curl -i -v localhost:56055 -d "{\"description\":\"message $RANDOM\"}" -H 'Content-Type: application/io.goswagger.examples.todo-list.v1+json'

@@ -5,6 +5,12 @@ package restapi
 import (
 	"crypto/tls"
 	"net/http"
+	"sync"
+	"sync/atomic"
+
+	"github.com/go-openapi/swag"
+
+	"github.com/bwangelme/SwaggerDemo/models"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -18,6 +24,55 @@ import (
 
 func configureFlags(api *operations.TodoListAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
+}
+
+var items = make(map[int64]*models.Item)
+var lastID int64
+var itemsLock = &sync.Mutex{}
+
+func newItemID() int64 {
+	return atomic.AddInt64(&lastID, 1)
+}
+
+func addItem(item *models.Item) error {
+	if item == nil {
+		return errors.New(http.StatusInternalServerError, "item must be present")
+	}
+
+	itemsLock.Lock()
+	defer itemsLock.Unlock()
+
+	newID := newItemID()
+	item.ID = newID
+	items[newID] = item
+
+	return nil
+}
+
+func deleteItem(id int64) error {
+	itemsLock.Lock()
+	defer itemsLock.Unlock()
+
+	_, exists := items[id]
+	if !exists {
+		return errors.NotFound("not found: item %d", id)
+	}
+
+	delete(items, id)
+	return nil
+}
+
+func allItems(since int64, limit int64) (result []*models.Item) {
+	result = make([]*models.Item, 0)
+	for id, item := range items {
+		if len(result) >= int(limit) {
+			return
+		}
+		if since == 0 || id > since {
+			result = append(result, item)
+		}
+	}
+	return
 }
 
 func configureAPI(api *operations.TodoListAPI) http.Handler {
@@ -34,11 +89,38 @@ func configureAPI(api *operations.TodoListAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.TodosGetHandler == nil {
-		api.TodosGetHandler = todos.GetHandlerFunc(func(params todos.GetParams) middleware.Responder {
-			return middleware.NotImplemented("operation todos.Get has not yet been implemented")
-		})
-	}
+	api.TodosDeleteIDHandler = todos.DeleteIDHandlerFunc(func(params todos.DeleteIDParams) middleware.Responder {
+		if err := deleteItem(params.ID); err != nil {
+			return todos.NewDeleteIDDefault(500).WithPayload(&models.Error{
+				Code:    500,
+				Message: swag.String(err.Error()),
+			})
+		}
+		return todos.NewDeleteIDNoContent()
+	})
+
+	api.TodosPostHandler = todos.PostHandlerFunc(func(params todos.PostParams) middleware.Responder {
+		if err := addItem(params.Body); err != nil {
+			return todos.NewPostDefault(500).WithPayload(&models.Error{
+				Code:    500,
+				Message: swag.String(err.Error()),
+			})
+		}
+		return todos.NewPostCreated().WithPayload(params.Body)
+	})
+
+	api.TodosGetHandler = todos.GetHandlerFunc(func(params todos.GetParams) middleware.Responder {
+		mergedParams := todos.NewGetParams()
+		mergedParams.Since = swag.Int64(0)
+		if params.Since != nil {
+			mergedParams.Since = params.Since
+		}
+		if params.Limit != nil {
+			mergedParams.Limit = params.Limit
+		}
+
+		return todos.NewGetOK().WithPayload(allItems(*mergedParams.Since, *mergedParams.Limit))
+	})
 
 	api.ServerShutdown = func() {}
 
