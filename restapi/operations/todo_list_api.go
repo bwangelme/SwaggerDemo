@@ -39,17 +39,17 @@ func NewTodoListAPI(spec *loads.Document) *TodoListAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
-		TodosDeleteIDHandler: todos.DeleteIDHandlerFunc(func(params todos.DeleteIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosDeleteID has not yet been implemented")
+		TodosAddOneHandler: todos.AddOneHandlerFunc(func(params todos.AddOneParams) middleware.Responder {
+			return middleware.NotImplemented("operation TodosAddOne has not yet been implemented")
 		}),
-		TodosGetHandler: todos.GetHandlerFunc(func(params todos.GetParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosGet has not yet been implemented")
+		TodosDestroyOneHandler: todos.DestroyOneHandlerFunc(func(params todos.DestroyOneParams) middleware.Responder {
+			return middleware.NotImplemented("operation TodosDestroyOne has not yet been implemented")
 		}),
-		TodosPostHandler: todos.PostHandlerFunc(func(params todos.PostParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosPost has not yet been implemented")
+		TodosFindTodosHandler: todos.FindTodosHandlerFunc(func(params todos.FindTodosParams) middleware.Responder {
+			return middleware.NotImplemented("operation TodosFindTodos has not yet been implemented")
 		}),
-		TodosPutIDHandler: todos.PutIDHandlerFunc(func(params todos.PutIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosPutID has not yet been implemented")
+		TodosUpdateOneHandler: todos.UpdateOneHandlerFunc(func(params todos.UpdateOneParams) middleware.Responder {
+			return middleware.NotImplemented("operation TodosUpdateOne has not yet been implemented")
 		}),
 	}
 }
@@ -82,14 +82,14 @@ type TodoListAPI struct {
 	// JSONProducer registers a producer for a "application/io.goswagger.examples.todo-list.v1+json" mime type
 	JSONProducer runtime.Producer
 
-	// TodosDeleteIDHandler sets the operation handler for the delete ID operation
-	TodosDeleteIDHandler todos.DeleteIDHandler
-	// TodosGetHandler sets the operation handler for the get operation
-	TodosGetHandler todos.GetHandler
-	// TodosPostHandler sets the operation handler for the post operation
-	TodosPostHandler todos.PostHandler
-	// TodosPutIDHandler sets the operation handler for the put ID operation
-	TodosPutIDHandler todos.PutIDHandler
+	// TodosAddOneHandler sets the operation handler for the add one operation
+	TodosAddOneHandler todos.AddOneHandler
+	// TodosDestroyOneHandler sets the operation handler for the destroy one operation
+	TodosDestroyOneHandler todos.DestroyOneHandler
+	// TodosFindTodosHandler sets the operation handler for the find todos operation
+	TodosFindTodosHandler todos.FindTodosHandler
+	// TodosUpdateOneHandler sets the operation handler for the update one operation
+	TodosUpdateOneHandler todos.UpdateOneHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -153,20 +153,20 @@ func (o *TodoListAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.TodosDeleteIDHandler == nil {
-		unregistered = append(unregistered, "todos.DeleteIDHandler")
+	if o.TodosAddOneHandler == nil {
+		unregistered = append(unregistered, "todos.AddOneHandler")
 	}
 
-	if o.TodosGetHandler == nil {
-		unregistered = append(unregistered, "todos.GetHandler")
+	if o.TodosDestroyOneHandler == nil {
+		unregistered = append(unregistered, "todos.DestroyOneHandler")
 	}
 
-	if o.TodosPostHandler == nil {
-		unregistered = append(unregistered, "todos.PostHandler")
+	if o.TodosFindTodosHandler == nil {
+		unregistered = append(unregistered, "todos.FindTodosHandler")
 	}
 
-	if o.TodosPutIDHandler == nil {
-		unregistered = append(unregistered, "todos.PutIDHandler")
+	if o.TodosUpdateOneHandler == nil {
+		unregistered = append(unregistered, "todos.UpdateOneHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -267,25 +267,25 @@ func (o *TodoListAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"][""] = todos.NewAddOne(o.context, o.TodosAddOneHandler)
+
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/{id}"] = todos.NewDeleteID(o.context, o.TodosDeleteIDHandler)
+	o.handlers["DELETE"]["/{id}"] = todos.NewDestroyOne(o.context, o.TodosDestroyOneHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"][""] = todos.NewGet(o.context, o.TodosGetHandler)
-
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"][""] = todos.NewPost(o.context, o.TodosPostHandler)
+	o.handlers["GET"][""] = todos.NewFindTodos(o.context, o.TodosFindTodosHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/{id}"] = todos.NewPutID(o.context, o.TodosPutIDHandler)
+	o.handlers["PUT"]["/{id}"] = todos.NewUpdateOne(o.context, o.TodosUpdateOneHandler)
 
 }
 

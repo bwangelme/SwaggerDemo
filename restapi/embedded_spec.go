@@ -39,10 +39,12 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "findTodos",
         "parameters": [
           {
             "type": "integer",
             "format": "int64",
+            "default": 0,
             "name": "since",
             "in": "query"
           },
@@ -76,6 +78,7 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "addOne",
         "parameters": [
           {
             "name": "body",
@@ -106,6 +109,7 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "updateOne",
         "parameters": [
           {
             "name": "body",
@@ -134,6 +138,7 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "destroyOne",
         "responses": {
           "204": {
             "description": "Deleted"
@@ -217,10 +222,12 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "findTodos",
         "parameters": [
           {
             "type": "integer",
             "format": "int64",
+            "default": 0,
             "name": "since",
             "in": "query"
           },
@@ -254,6 +261,7 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "addOne",
         "parameters": [
           {
             "name": "body",
@@ -284,6 +292,7 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "updateOne",
         "parameters": [
           {
             "name": "body",
@@ -312,6 +321,7 @@ func init() {
         "tags": [
           "todos"
         ],
+        "operationId": "destroyOne",
         "responses": {
           "204": {
             "description": "Deleted"

@@ -24,17 +24,20 @@ func NewFindTodosParams() FindTodosParams {
 		// initialize parameters with default values
 
 		limitDefault = int64(20)
+		sinceDefault = int64(0)
 	)
 
 	return FindTodosParams{
 		Limit: &limitDefault,
+
+		Since: &sinceDefault,
 	}
 }
 
 // FindTodosParams contains all the bound params for the find todos operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters find_todos
+// swagger:parameters findTodos
 type FindTodosParams struct {
 
 	// HTTP Request Object
@@ -47,6 +50,7 @@ type FindTodosParams struct {
 	Limit *int64
 	/*
 	  In: query
+	  Default: 0
 	*/
 	Since *int64
 }
@@ -111,6 +115,7 @@ func (o *FindTodosParams) bindSince(rawData []string, hasKey bool, formats strfm
 	// Required: false
 	// AllowEmptyValue: false
 	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewFindTodosParams()
 		return nil
 	}
 
