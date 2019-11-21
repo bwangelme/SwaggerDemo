@@ -4,11 +4,12 @@ package restapi
 
 import (
 	"crypto/tls"
-	"github.com/bwangelme/SwaggerDemo/models"
-	"github.com/go-openapi/swag"
 	"net/http"
 	"sync"
 	"sync/atomic"
+
+	"github.com/bwangelme/SwaggerDemo/models"
+	"github.com/go-openapi/swag"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -25,7 +26,7 @@ func configureFlags(api *operations.TodoListAPI) {
 }
 
 var items = make(map[int64]*models.Item)
-var lastID int64 = 1
+var lastID int64 = 0
 var itemsLock = &sync.Mutex{}
 
 func newItemID() int64 {
@@ -89,6 +90,16 @@ func allItems(since, limit int64) (result []*models.Item) {
 		}
 	}
 
+	return result
+}
+
+func getItem(id int64) (result *models.Item) {
+	for _, item := range items {
+		if id == item.ID {
+			return item
+		}
+	}
+
 	return nil
 }
 
@@ -108,16 +119,17 @@ func configureAPI(api *operations.TodoListAPI) http.Handler {
 
 	api.TodosAddOneHandler = todos.AddOneHandlerFunc(func(params todos.AddOneParams) middleware.Responder {
 		if err := addItem(params.Body); err != nil {
-			return todos.NewAddOneDefault(500).WithPayload(&models.Error{Code:500, Message: swag.String(err.Error())})
+			return todos.NewAddOneDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
 
 		return todos.NewAddOneCreated().WithPayload(params.Body)
 	})
-	if api.TodosDestroyOneHandler == nil {
-		api.TodosDestroyOneHandler = todos.DestroyOneHandlerFunc(func(params todos.DestroyOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation todos.DestroyOne has not yet been implemented")
-		})
-	}
+	api.TodosDestroyOneHandler = todos.DestroyOneHandlerFunc(func(params todos.DestroyOneParams) middleware.Responder {
+		if err := deleteItem(params.ID); err != nil {
+			return todos.NewDestroyOneDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return todos.NewDestroyOneNoContent()
+	})
 	api.TodosFindTodosHandler = todos.FindTodosHandlerFunc(func(params todos.FindTodosParams) middleware.Responder {
 		mergedParams := todos.NewFindTodosParams()
 		mergedParams.Since = swag.Int64(0)
@@ -130,11 +142,12 @@ func configureAPI(api *operations.TodoListAPI) http.Handler {
 		return todos.NewFindTodosOK().WithPayload(allItems(*mergedParams.Since, *mergedParams.Limit))
 	})
 
-	if api.TodosUpdateOneHandler == nil {
-		api.TodosUpdateOneHandler = todos.UpdateOneHandlerFunc(func(params todos.UpdateOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation todos.UpdateOne has not yet been implemented")
-		})
-	}
+	api.TodosUpdateOneHandler = todos.UpdateOneHandlerFunc(func(params todos.UpdateOneParams) middleware.Responder {
+		if err := updateItem(params.ID, params.Body); err != nil {
+			return todos.NewUpdateOneDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return todos.NewUpdateOneOK().WithPayload(getItem(params.ID))
+	})
 
 	api.ServerShutdown = func() {}
 

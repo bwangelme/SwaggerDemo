@@ -12,4 +12,8 @@ swagger init spec \
 	--consumes application/io.goswagger.examples.todo-list.v1+json \
 	--produces application/io.goswagger.examples.todo-list.v1+json
 
-curl -i -v localhost:56055 -d "{\"description\":\"message $RANDOM\"}" -H 'Content-Type: application/io.goswagger.examples.todo-list.v1+json'
+http GET ':8080?since=0'
+http POST :8080 description="Message $RANDOM"
+http DELETE ':8080/1'
+http PUT ':8080/2' description=xff
+http PUT ':8080/2' <<< '{"description": "xff", "completed": false}'

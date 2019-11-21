@@ -1,8 +1,8 @@
 swagger: "2.0"
 consumes:
-  - application/io.goswagger.examples.todo-list.v1+json
+  - application/json
 produces:
-  - application/io.goswagger.examples.todo-list.v1+json
+  - application/json
 info:
   description: From the todo list tutorial on goswagger.io
   title: A todo list application
@@ -104,7 +104,7 @@ definitions:
       description:
         type: string
         minLength: 1
-      completed:
+      completed: # TODO 为什么输出的时候没有输出 completed 字段
         type: boolean
   error:
     type: object
