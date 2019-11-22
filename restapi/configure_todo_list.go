@@ -4,6 +4,7 @@ package restapi
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -20,9 +21,20 @@ import (
 )
 
 //go:generate swagger generate server --target ../../SwaggerDemo --name TodoList --spec ../swagger.yml
+var exampleFlags = struct {
+	Example1 string `long:"example1" description:"Sample for showing how to configure cmd-line flags"`
+	Example2 string `long:"example2" description:"Further info at https://github.com/jessevdk/go-flags"`
+}{}
+
 
 func configureFlags(api *operations.TodoListAPI) {
-	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
+	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
+		swag.CommandLineOptionsGroup{
+			ShortDescription: "Example Flags",
+			LongDescription: "",
+			Options: &exampleFlags,
+		},
+	}
 }
 
 var items = make(map[int64]*models.Item)
@@ -150,6 +162,8 @@ func configureAPI(api *operations.TodoListAPI) http.Handler {
 	})
 
 	api.ServerShutdown = func() {}
+	println(exampleFlags.Example1)
+	println(exampleFlags.Example2)
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
 }
@@ -164,6 +178,9 @@ func configureTLS(tlsConfig *tls.Config) {
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix"
 func configureServer(s *http.Server, scheme, addr string) {
+	if exampleFlags.Example1 != "something" {
+		fmt.Println("example1 argument is not something")
+	}
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
